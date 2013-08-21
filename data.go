@@ -56,12 +56,14 @@ func ReadMetric(name string, from int32, until int32) chan Datapoint {
 	}
 	metric := data[name]
 	out := make(chan Datapoint)
-	for _, d := range metric.data {
-		if d.ts >= from && until <= until {
-			fmt.Printf("ReadMetric %s writing %s\n", name, *d)
-			out <- *d
+	go func(out chan Datapoint, metric *Metric_data) {
+		for _, d := range metric.data {
+			if d.ts >= from && until <= until {
+				fmt.Printf("ReadMetric %s writing %s\n", name, *d)
+				out <- *d
+			}
 		}
-	}
+	}(out, metric)
 	return out
 
 }
