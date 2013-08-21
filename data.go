@@ -26,6 +26,7 @@ func NewMetric_data(name string, data []*Datapoint) *Metric_data {
 	return &Metric_data{name, data}
 }
 func ReadMetric(name string, from int32, until int32) chan Datapoint {
+	// 2+15=17, 3+20=23, nil+5=nil, 2+10=12, 0+nil=nil
 	data := map[string]*Metric_data{
 		"stats.web1.bytes_received": NewMetric_data(
 			"stats.web1.bytes_received",
@@ -59,7 +60,6 @@ func ReadMetric(name string, from int32, until int32) chan Datapoint {
 	go func(out chan Datapoint, metric *Metric_data) {
 		for _, d := range metric.data {
 			if d.ts >= from && until <= until {
-				fmt.Printf("ReadMetric %s writing %s\n", name, *d)
 				out <- *d
 			}
 		}

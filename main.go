@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"strconv"
 	"text/template"
 )
 
@@ -53,8 +54,10 @@ func renderJson(command string, from int32, until int32) string {
 			panic(err)
 		}
 	}()
-	fmt.Println("original command:")
-	fmt.Println(command)
+	fmt.Println("incoming request:")
+	fmt.Println("command:", command)
+	fmt.Println("from:   ", from)
+	fmt.Println("until:  ", until)
 	cmd := ""
 	skip := false
 	for i, t := range tokens {
@@ -110,21 +113,40 @@ func renderJson(command string, from int32, until int32) string {
 	}
 	if stderr.Len() > 0 {
 		fmt.Printf("sterr:", stderr.String())
+		return stderr.String()
 	}
-	fmt.Printf("output:", stdout.String())
 	return stdout.String()
 }
 
 func renderHandler(w http.ResponseWriter, r *http.Request) {
 	const lenPath = len("/render/")
+	from := int32(0)
+	until := int32(120)
 	command := r.URL.Path[lenPath:]
-	fmt.Fprintf(w, renderJson(command, 1, 1))
+	r.ParseForm()
+	fmt.Println("FORM", r.Form)
+	map_from := r.Form["from"]
+	if len(map_from) > 0 {
+		from_i64, err := strconv.ParseInt(map_from[0], 10, 32)
+		if err != nil {
+			fmt.Fprintf(w, "Error: invalid 'from' spec: "+map_from[0])
+			return
+		}
+		from = int32(from_i64)
+	}
+	map_until := r.Form["until"]
+	if len(map_until) > 0 {
+		until_i64, err := strconv.ParseInt(map_until[0], 10, 32)
+		if err != nil {
+			fmt.Fprintf(w, "Error: invalid 'until' spec: "+map_until[0])
+			return
+		}
+		until = int32(until_i64)
+	}
+	fmt.Fprintf(w, renderJson(command, from, until))
 }
 
 func main() {
 	http.HandleFunc("/render/", renderHandler)
-
-	json := renderJson("sum(stats.web1.bytes_received,scale(stats.web2.bytes_received,5))", 60, 300)
-	fmt.Print(json)
 	http.ListenAndServe(":8080", nil)
 }

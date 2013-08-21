@@ -1,43 +1,39 @@
 package main
 
-import (
-	"fmt"
-)
-
 // like with graphite, it is assumed datapoints from different inputs are time synchronized
 // at some point we might lift that and take it into account in individual functions
 func FnSum(from int32, until int32, in ...chan Datapoint) chan Datapoint {
 	out := make(chan Datapoint)
 	go func(from int32, until int32, out chan Datapoint, in []chan Datapoint) {
 		var sum float64
+		var known bool
 		// for every point in time (can't iterate over them here, they come from the channels)
 		for {
 			// sum the datapoints from the different channels together (each dp from each chan is one term)
 			// we're done when we reached the last channel and the ts == until
+			// if one or more of the points is !known, the resulting sum is not known
 			for i, c := range in {
-				// first term in the sum, reset sum
+				// first term in the sum, reset the data that will go into datapoint
 				if i == 0 {
-					//fmt.Println("reset sum")
+					known = true
 					sum = 0.0
 				}
 				d := <-c
-				fmt.Println("FnSum read", d, "from chan", i)
-				// if one of the values in the sum is unknown, the result is unknown
-				if !d.known {
-					//fmt.Println("FnSum yielding nil")
-					out <- *NewDatapoint(d.ts, 0.0, false)
-					if i == len(in)-1 && d.ts == until {
-						return
-					}
-					break
-				}
-				sum += d.value
-				fmt.Println("sum is now", sum)
-				if i == len(in)-1 {
-					//fmt.Println("FnSum yielding a sum", sum)
-					out <- *NewDatapoint(d.ts, sum, true)
-					if d.ts == until {
-						return
+				if known {
+					if !d.known {
+						known = false
+						out <- *NewDatapoint(d.ts, 0.0, false)
+						if i == len(in)-1 && d.ts == until {
+							return
+						}
+					} else {
+						sum += d.value
+						if i == len(in)-1 {
+							out <- *NewDatapoint(d.ts, sum, true)
+							if d.ts == until {
+								return
+							}
+						}
 					}
 				}
 			}
@@ -52,7 +48,6 @@ func FnScale(from int32, until int32, in chan Datapoint, multiplier float64) cha
 	go func(from int32, until int32, out chan Datapoint, in chan Datapoint, multiplier float64) {
 		for {
 			d := <-in
-			fmt.Println("FnScale read", d)
 			if !d.known {
 				out <- *NewDatapoint(d.ts, 0.0, false)
 				if d.ts == until {
@@ -60,7 +55,6 @@ func FnScale(from int32, until int32, in chan Datapoint, multiplier float64) cha
 				}
 				continue
 			}
-			//fmt.Println("FnScale yielding...")
 			out <- *NewDatapoint(d.ts, d.value*multiplier, true)
 			if d.ts == until {
 				return

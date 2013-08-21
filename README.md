@@ -21,3 +21,7 @@ to try it out, run this from the code checkout:
 ```
 rm -f executor-*.go ; go install github.com/Dieterbe/graphite-ng && graphite-ng
 ```
+then open this in your browser:
+```
+http://localhost:8080/render/sum(stats.web1.bytes_received,scale(stats.web2.bytes_received,5))?from=60&until=300
+```
