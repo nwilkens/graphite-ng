@@ -19,8 +19,9 @@ func NewToken(pos token.Position, tok token.Token, lit string) *Token {
 func (t *Token) String() string {
 	return fmt.Sprintf("%s\t%s\t%q", t.pos, t.tok, t.lit)
 }
+
 func main() {
-	test1 := "sum(stats.web1.bytes_received,scale(stats.web2.bytes_received,5))"
+	test1 := "sum(stats.web1.bytes_received,scale(stats.web2.bytes_received,5))&from=60&until=300"
 	src := []byte(test1)
 
 	var s scanner.Scanner
@@ -39,4 +40,16 @@ func main() {
 	for _, t := range tokens {
 		fmt.Println(t.String())
 	}
+
+	from := 60
+	until := 300
+	out := Functions["sum"](from, until, readMetric("stats.web1.bytes_received"), Functions["scale"](from, until, readMetric("stats.web2.bytes_received"), 5))
+	for {
+		d := <-out
+		fmt.Println(d)
+		if d.ts >= until {
+			break
+		}
+	}
+
 }
