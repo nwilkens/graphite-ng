@@ -2,7 +2,7 @@ package main
 
 // like with graphite, it is assumed datapoints from different inputs are time synchronized
 // at some point we might lift that and take it into account in individual functions
-func sumSeries(from int32, until int32, in ...chan Datapoint) chan Datapoint {
+func FnSum(from int32, until int32, in ...chan Datapoint) chan Datapoint {
 	out := make(chan Datapoint)
 	// for every point in time (can't iterate over them here, they come from the channels)
 	for {
@@ -35,7 +35,7 @@ func sumSeries(from int32, until int32, in ...chan Datapoint) chan Datapoint {
 }
 
 // todo: allow N inputs and outputs
-func scale(from int32, until int32, in chan Datapoint, multiplier float64) chan Datapoint {
+func FnScale(from int32, until int32, in chan Datapoint, multiplier float64) chan Datapoint {
 	out := make(chan Datapoint)
 	for {
 		d := <-in
@@ -53,8 +53,8 @@ func scale(from int32, until int32, in chan Datapoint, multiplier float64) chan 
 	}
 }
 
-var Functions = map[string]interface{}{
-	"sum":       sumSeries,
-	"sumSeries": sumSeries,
-	"scale":     scale,
+var Functions = map[string]string{
+	"sum":       "FnSum(from, until, ",
+	"sumSeries": "FnSum(from, until, ",
+	"scale":     "FnScale(from, until, ",
 }
