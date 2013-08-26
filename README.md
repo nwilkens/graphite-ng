@@ -9,7 +9,15 @@ However:
  * No carbon/whisper/ceres alike at this point. (I later want to hook this up to a reliable timeseries store, maybe whisper, ceres, kairosdb, ...).
  * No events system (graphite events sucks, [anthracite](https://github.com/Dieterbe/anthracite/) is better)
 
-Ideas of converting commands to metrics processing:
-* translate user input to go code directly, compile and execute: small code and very powerfull. but hard to do validation
-* use a Go scanner/lexer: harder and verboser, but safer.
+So what this does is spawn a webserver that gives you a /render/ endpoint where you can do queries like
+`/render/sum(stats.web1.bytes_received,scale(stats.web2.bytes_received,5))from=123&until=456`
 
+It's not entirely working yet, but close.
+
+Note that the program converts all user input into a real, functioning Go program, compiles and runs it, and runs the stdout.
+It can do this because the graphite api notation can easily be converted to real program code.  Great power, great responsability.
+
+to try it out, run this from the code checkout:
+```
+rm -f executor-*.go ; go install github.com/Dieterbe/graphite-ng && graphite-ng
+```

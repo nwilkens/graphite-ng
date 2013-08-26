@@ -3,9 +3,12 @@ package main
 import (
 	"fmt"
 	"go/scanner"
+    "math/rand"
 	"go/token"
+    "bytes"
 	"net/http"
 	"os"
+    "os/exec"
 	"text/template"
 )
 
@@ -24,7 +27,6 @@ func (t *Token) String() string {
 }
 
 func renderJson(command string, from int32, until int32) string {
-	out := ""
 	src := []byte(command)
 
 	var s scanner.Scanner
