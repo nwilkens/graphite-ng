@@ -1,14 +1,14 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"go/scanner"
-    "math/rand"
 	"go/token"
-    "bytes"
+	"math/rand"
 	"net/http"
 	"os"
-    "os/exec"
+	"os/exec"
 	"text/template"
 )
 
@@ -46,36 +46,37 @@ func renderJson(command string, from int32, until int32) string {
 	if err != nil {
 		panic(err)
 	}
-	fo, err := os.Create("executor.go")
+	fname := fmt.Sprintf("executor-%d.go", rand.Int())
+	fo, err := os.Create(fname)
 	defer func() {
 		if err := fo.Close(); err != nil {
 			panic(err)
 		}
 	}()
-    fmt.Println("original command:")
-    fmt.Println(command)
-    cmd := ""
-    skip := false
+	fmt.Println("original command:")
+	fmt.Println(command)
+	cmd := ""
+	skip := false
 	for i, t := range tokens {
-        if skip {
-            skip = false
-            continue
-        }
+		if skip {
+			skip = false
+			continue
+		}
 		switch t.tok {
 		case token.IDENT:
-            // a function is starting
-            if tokens[i+1].tok == token.LPAREN {
-             cmd += Functions[t.lit]
-            skip = true // skip the next LPAREN, we already included one
-        // this is the beginning of a target string
-        } else if tokens[i+1].tok == token.PERIOD && tokens[i-1].tok != token.PERIOD {
-             cmd += "ReadMetric(\"" + t.lit
-        // this is the end of a target string
-        } else if tokens[i-1].tok == token.PERIOD && tokens[i+1].tok != token.PERIOD {
-            cmd += t.lit + "\", from, until)"
-        } else {
-            cmd += t.lit
-        }
+			// a function is starting
+			if tokens[i+1].tok == token.LPAREN {
+				cmd += Functions[t.lit]
+				skip = true // skip the next LPAREN, we already included one
+				// this is the beginning of a target string
+			} else if tokens[i+1].tok == token.PERIOD && tokens[i-1].tok != token.PERIOD {
+				cmd += "ReadMetric(\"" + t.lit
+				// this is the end of a target string
+			} else if tokens[i-1].tok == token.PERIOD && tokens[i+1].tok != token.PERIOD {
+				cmd += t.lit + "\", from, until)"
+			} else {
+				cmd += t.lit
+			}
 		case token.LPAREN:
 			cmd += "("
 		case token.RPAREN:
@@ -95,10 +96,23 @@ func renderJson(command string, from int32, until int32) string {
 	}
 	params := Params{from, until, cmd}
 	fmt.Println("writing to template", params)
-    fmt.Printf(params.Cmd)
 	t.Execute(fo, params)
-    # go run executor.go functions.go data.go
-	return out
+	// TODO: timeout, display errors, etc
+	fmt.Printf("executing: go run %s functions.go data.go\n", fname)
+	cmd_exec := exec.Command("go", "run", fname, "functions.go", "data.go")
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	cmd_exec.Stdout = &stdout
+	cmd_exec.Stderr = &stderr
+	err = cmd_exec.Run()
+	if err != nil {
+		fmt.Printf("error:", err)
+	}
+	if stderr.Len() > 0 {
+		fmt.Printf("sterr:", stderr.String())
+	}
+	fmt.Printf("output:", stdout.String())
+	return stdout.String()
 }
 
 func renderHandler(w http.ResponseWriter, r *http.Request) {

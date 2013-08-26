@@ -1,8 +1,9 @@
 package main
 
 import (
-    "fmt"
+	"fmt"
 )
+
 type Datapoint struct {
 	ts    int32
 	value float64
@@ -18,7 +19,7 @@ func NewDatapoint(ts int32, value float64, known bool) *Datapoint {
 }
 
 func (d *Datapoint) String() string {
-    return fmt.Sprintf("datapoint ts=%i, value=%f, known=%b", d.ts, d.value, d.known)
+	return fmt.Sprintf("datapoint ts=%i, value=%f, known=%b", d.ts, d.value, d.known)
 }
 
 func NewMetric_data(name string, data []*Datapoint) *Metric_data {
@@ -57,7 +58,7 @@ func ReadMetric(name string, from int32, until int32) chan Datapoint {
 	out := make(chan Datapoint)
 	for _, d := range metric.data {
 		if d.ts >= from && until <= until {
-            fmt.Printf("ReadMetric %s writing %s\n", name, *d)
+			fmt.Printf("ReadMetric %s writing %s\n", name, *d)
 			out <- *d
 		}
 	}
