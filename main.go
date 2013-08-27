@@ -27,9 +27,8 @@ func (t *Token) String() string {
 	return fmt.Sprintf("%s\t%s\t%q", t.pos, t.tok, t.lit)
 }
 
-func renderJson(command string, from int32, until int32) string {
-	src := []byte(command)
-
+func generateCommand(target string) string {
+	src := []byte(target)
 	var s scanner.Scanner
 	fset := token.NewFileSet()
 	file := fset.AddFile("", fset.Base(), len(src))
@@ -43,6 +42,51 @@ func renderJson(command string, from int32, until int32) string {
 		}
 		tokens = append(tokens, *NewToken(fset.Position(pos), tok, lit))
 	}
+	cmd := ""
+	for i, t := range tokens {
+		switch t.tok {
+		case token.IDENT:
+			// a function is starting
+			if tokens[i+1].tok == token.LPAREN {
+				cmd += Functions[t.lit]
+				// this is the beginning of a target string
+			} else if tokens[i+1].tok == token.PERIOD && tokens[i-1].tok != token.PERIOD {
+				cmd += "ReadMetric(\"" + t.lit
+				// this is the end of a target string
+			} else if tokens[i-1].tok == token.PERIOD && tokens[i+1].tok != token.PERIOD {
+				cmd += t.lit + "\")"
+			} else {
+				cmd += t.lit
+			}
+		case token.LPAREN:
+			cmd += "(\n"
+		case token.RPAREN:
+			cmd += ")"
+		case token.PERIOD:
+			cmd += "."
+		case token.COMMA:
+			cmd += ",\n"
+		case token.INT:
+			cmd += t.lit
+		}
+	}
+	return cmd
+}
+func renderJson(targets_list []string, from int32, until int32) string {
+	type Target struct {
+		Query string
+		Cmd   string
+	}
+	type Params struct {
+		From    int32
+		Until   int32
+		Targets []Target
+	}
+	targets := make([]Target, 0)
+	for _, target := range targets_list {
+		targets = append(targets, Target{target, generateCommand(target)})
+	}
+	params := Params{from, until, targets}
 	t, err := template.ParseFiles("executor.go.tpl")
 	if err != nil {
 		panic(err)
@@ -54,50 +98,6 @@ func renderJson(command string, from int32, until int32) string {
 			panic(err)
 		}
 	}()
-	fmt.Println("incoming request:")
-	fmt.Println("command:", command)
-	fmt.Println("from:   ", from)
-	fmt.Println("until:  ", until)
-	cmd := ""
-	skip := false
-	for i, t := range tokens {
-		if skip {
-			skip = false
-			continue
-		}
-		switch t.tok {
-		case token.IDENT:
-			// a function is starting
-			if tokens[i+1].tok == token.LPAREN {
-				cmd += Functions[t.lit]
-				skip = true // skip the next LPAREN, we already included one
-				// this is the beginning of a target string
-			} else if tokens[i+1].tok == token.PERIOD && tokens[i-1].tok != token.PERIOD {
-				cmd += "ReadMetric(\"" + t.lit
-				// this is the end of a target string
-			} else if tokens[i-1].tok == token.PERIOD && tokens[i+1].tok != token.PERIOD {
-				cmd += t.lit + "\", from, until)"
-			} else {
-				cmd += t.lit
-			}
-		case token.LPAREN:
-			cmd += "("
-		case token.RPAREN:
-			cmd += ")"
-		case token.PERIOD:
-			cmd += "."
-		case token.COMMA:
-			cmd += ", "
-		case token.INT:
-			cmd += t.lit
-		}
-	}
-	type Params struct {
-		From  int32
-		Until int32
-		Cmd   string
-	}
-	params := Params{from, until, cmd}
 	fmt.Println("writing to template", params)
 	t.Execute(fo, params)
 	// TODO: timeout, display errors, etc
@@ -119,31 +119,34 @@ func renderJson(command string, from int32, until int32) string {
 }
 
 func renderHandler(w http.ResponseWriter, r *http.Request) {
-	const lenPath = len("/render/")
 	from := int32(0)
 	until := int32(360)
-	command := r.URL.Path[lenPath:]
 	r.ParseForm()
 	fmt.Println("FORM", r.Form)
-	map_from := r.Form["from"]
-	if len(map_from) > 0 {
-		from_i64, err := strconv.ParseInt(map_from[0], 10, 32)
+	from_list := r.Form["from"]
+	if len(from_list) > 0 {
+		from_i64, err := strconv.ParseInt(from_list[0], 10, 32)
 		if err != nil {
-			fmt.Fprintf(w, "Error: invalid 'from' spec: "+map_from[0])
+			fmt.Fprintf(w, "Error: invalid 'from' spec: "+from_list[0])
 			return
 		}
 		from = int32(from_i64)
 	}
-	map_until := r.Form["until"]
-	if len(map_until) > 0 {
-		until_i64, err := strconv.ParseInt(map_until[0], 10, 32)
+	until_list := r.Form["until"]
+	if len(until_list) > 0 {
+		until_i64, err := strconv.ParseInt(until_list[0], 10, 32)
 		if err != nil {
-			fmt.Fprintf(w, "Error: invalid 'until' spec: "+map_until[0])
+			fmt.Fprintf(w, "Error: invalid 'until' spec: "+until_list[0])
 			return
 		}
 		until = int32(until_i64)
 	}
-	fmt.Fprintf(w, renderJson(command, from, until))
+	targets_list := r.Form["target"]
+	if len(targets_list) < 1 {
+		fmt.Fprintf(w, "{}")
+	} else {
+		fmt.Fprintf(w, renderJson(targets_list, from, until))
+	}
 }
 
 func main() {

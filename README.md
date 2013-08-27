@@ -23,6 +23,16 @@ rm -f executor-*.go ; go install github.com/Dieterbe/graphite-ng && graphite-ng
 ```
 then open something like this in your browser:
 ```
-http://localhost:8080/render/sum(stats.web1.bytes_received,scale(stats.web2.bytes_received,5))?from=60&until=300
+http://localhost:8080/render/?target=sum(stats.web1.bytes_received,scale(stats.web2.bytes_received,5))&from=60&until=300
 ```
 look at data.go and functions.go for which metrics and functions you can use so far.
+
+
+interesting things & diff with real graphite:
+* consistently treat datapoint as the value covering the timespan leading up to it, this matters esp. for derivative, integral, etc
+* make functions that need extra info outside of the from-until range (i.e. derivative needs the from-60 datapoint; movingAverage needs x previous datapoints, etc)
+  able to get that info in an elegant way. unlike graphite where sometimes the beginning of your graph is empty because a movingAverage only has enough data halfway the graph.
+* clever automatic rollups based on tags (TODO)
+* The keys in Graphite's json output are sometimes not exactly the requested target string (usually manifests itself as floats being rounded), it's not so easily fixed in Graphite
+  due to the pathExpression system,  which means client renderes have to implement ugly hacks to work around this.  With graphite-ng we just use the exact same string.
+* it should be easy to add your own functions, by loading them all as plugins (TODO)

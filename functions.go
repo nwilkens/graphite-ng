@@ -1,10 +1,21 @@
 package main
 
+import (
+	"github.com/Dieterbe/graphite-ng/chains"
+	"github.com/Dieterbe/graphite-ng/metrics"
+)
+
 // like with graphite, it is assumed datapoints from different inputs are time synchronized
 // at some point we might lift that and take it into account in individual functions
-func FnSum(from int32, until int32, in ...chan Datapoint) chan Datapoint {
-	out := make(chan Datapoint)
-	go func(from int32, until int32, out chan Datapoint, in []chan Datapoint) {
+func FnSum(dep_els ...chains.ChainEl) (our_el chains.ChainEl) {
+	our_el = *chains.NewChainEl()
+	go func(our_el chains.ChainEl, dep_els []chains.ChainEl) {
+		from := <-our_el.Settings
+		until := <-our_el.Settings
+		for _, dep_el := range dep_els {
+			dep_el.Settings <- from
+			dep_el.Settings <- until
+		}
 		var sum float64
 		var known bool
 		// for every point in time (can't iterate over them here, they come from the channels)
@@ -12,25 +23,25 @@ func FnSum(from int32, until int32, in ...chan Datapoint) chan Datapoint {
 			// sum the datapoints from the different channels together (each dp from each chan is one term)
 			// we're done when we reached the last channel and the ts == until
 			// if one or more of the points is !known, the resulting sum is not known
-			for i, c := range in {
+			for i, c := range dep_els {
 				// first term in the sum, reset the data that will go into datapoint
 				if i == 0 {
 					known = true
 					sum = 0.0
 				}
-				d := <-c
+				d := <-c.Link
 				if known {
-					if !d.known {
+					if !d.Known {
 						known = false
-						out <- *NewDatapoint(d.ts, 0.0, false)
-						if i == len(in)-1 && d.ts >= until {
+						our_el.Link <- *metrics.NewDatapoint(d.Ts, 0.0, false)
+						if i == len(dep_els)-1 && d.Ts >= until {
 							return
 						}
 					} else {
-						sum += d.value
-						if i == len(in)-1 {
-							out <- *NewDatapoint(d.ts, sum, true)
-							if d.ts >= until {
+						sum += d.Value
+						if i == len(dep_els)-1 {
+							our_el.Link <- *metrics.NewDatapoint(d.Ts, sum, true)
+							if d.Ts >= until {
 								return
 							}
 						}
@@ -38,34 +49,68 @@ func FnSum(from int32, until int32, in ...chan Datapoint) chan Datapoint {
 				}
 			}
 		}
-	}(from, until, out, in)
-	return out
+	}(our_el, dep_els)
+	return
 }
 
 // todo: allow N inputs and outputs
-func FnScale(from int32, until int32, in chan Datapoint, multiplier float64) chan Datapoint {
-	out := make(chan Datapoint)
-	go func(from int32, until int32, out chan Datapoint, in chan Datapoint, multiplier float64) {
+func FnScale(dep_el chains.ChainEl, multiplier float64) (our_el chains.ChainEl) {
+	our_el = *chains.NewChainEl()
+	go func(our_el chains.ChainEl, dep_el chains.ChainEl, multiplier float64) {
+		from := <-our_el.Settings
+		until := <-our_el.Settings
+		dep_el.Settings <- from
+		dep_el.Settings <- until
 		for {
-			d := <-in
-			if !d.known {
-				out <- *NewDatapoint(d.ts, 0.0, false)
-				if d.ts >= until {
+			d := <-dep_el.Link
+			if !d.Known {
+				our_el.Link <- *metrics.NewDatapoint(d.Ts, 0.0, false)
+				if d.Ts >= until {
 					return
 				}
 				continue
 			}
-			out <- *NewDatapoint(d.ts, d.value*multiplier, true)
-			if d.ts >= until {
+			our_el.Link <- *metrics.NewDatapoint(d.Ts, d.Value*multiplier, true)
+			if d.Ts >= until {
 				return
 			}
 		}
-	}(from, until, out, in, multiplier)
-	return out
+	}(our_el, dep_el, multiplier)
+	return
+}
+
+func FnDerivative(dep_el chains.ChainEl) (our_el chains.ChainEl) {
+	our_el = *chains.NewChainEl()
+	go func(our_el chains.ChainEl, dep_el chains.ChainEl) {
+		from := <-our_el.Settings
+		until := <-our_el.Settings
+		dep_el.Settings <- from - 60
+		dep_el.Settings <- until
+		var last_dp *metrics.Datapoint
+
+		for {
+			d := <-dep_el.Link
+			if last_dp == nil {
+				last_dp = &d
+				continue
+			}
+			if d.Known && last_dp.Known {
+				our_el.Link <- *metrics.NewDatapoint(d.Ts, d.Value-last_dp.Value, true)
+			} else {
+				our_el.Link <- *metrics.NewDatapoint(d.Ts, 0.0, false)
+			}
+			last_dp = &d
+			if d.Ts >= until {
+				return
+			}
+		}
+	}(our_el, dep_el)
+	return
 }
 
 var Functions = map[string]string{
-	"sum":       "FnSum(from, until, ",
-	"sumSeries": "FnSum(from, until, ",
-	"scale":     "FnScale(from, until, ",
+	"sum":        "FnSum",
+	"sumSeries":  "FnSum",
+	"scale":      "FnScale",
+	"derivative": "FnDerivative",
 }
