@@ -26,41 +26,51 @@ func NewMetric_data(name string, data []*Datapoint) *Metric_data {
 	return &Metric_data{name, data}
 }
 func ReadMetric(name string, from int32, until int32) chan Datapoint {
-	// 2+15=17, 3+20=23, nil+5=nil, 2+10=12, 0+nil=nil
 	data := map[string]*Metric_data{
 		"stats.web1.bytes_received": NewMetric_data(
 			"stats.web1.bytes_received",
 			[]*Datapoint{
-				NewDatapoint(0, 1.5, true),
-				NewDatapoint(60, 2, true),
 				NewDatapoint(120, 3, true),
 				NewDatapoint(180, 0, false),
 				NewDatapoint(240, 2, true),
 				NewDatapoint(300, 0, true),
 				NewDatapoint(360, 1, true),
 				NewDatapoint(420, 1, true),
+				NewDatapoint(480, 1.5, true),
+				NewDatapoint(540, 2, true),
 			},
 		),
 		"stats.web2.bytes_received": NewMetric_data(
 			"stats.web1.bytes_received",
 			[]*Datapoint{
-				NewDatapoint(0, 1, true),
-				NewDatapoint(60, 3, true),
 				NewDatapoint(120, 4, true),
 				NewDatapoint(180, 1, true),
 				NewDatapoint(240, 2, true),
 				NewDatapoint(300, 0, false),
 				NewDatapoint(360, 1, true),
 				NewDatapoint(420, 1, true),
+				NewDatapoint(480, 1, true),
+				NewDatapoint(540, 3, true),
 			},
 		),
 	}
 	metric := data[name]
 	out := make(chan Datapoint)
 	go func(out chan Datapoint, metric *Metric_data) {
+		// if we don't have enough data to cover the requested timespan, fill with nils
+		if metric.data[0].ts > from {
+			for new_ts := from; new_ts < metric.data[0].ts; new_ts += 60 {
+				out <- *NewDatapoint(new_ts, 0.0, false)
+			}
+		}
 		for _, d := range metric.data {
 			if d.ts >= from && until <= until {
 				out <- *d
+			}
+		}
+		if metric.data[len(metric.data)-1].ts < until {
+			for new_ts := metric.data[len(metric.data)-1].ts + 60; new_ts <= until+60; new_ts += 60 {
+				out <- *NewDatapoint(new_ts, 0.0, false)
 			}
 		}
 	}(out, metric)

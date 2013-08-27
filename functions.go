@@ -23,14 +23,14 @@ func FnSum(from int32, until int32, in ...chan Datapoint) chan Datapoint {
 					if !d.known {
 						known = false
 						out <- *NewDatapoint(d.ts, 0.0, false)
-						if i == len(in)-1 && d.ts == until {
+						if i == len(in)-1 && d.ts >= until {
 							return
 						}
 					} else {
 						sum += d.value
 						if i == len(in)-1 {
 							out <- *NewDatapoint(d.ts, sum, true)
-							if d.ts == until {
+							if d.ts >= until {
 								return
 							}
 						}
@@ -50,13 +50,13 @@ func FnScale(from int32, until int32, in chan Datapoint, multiplier float64) cha
 			d := <-in
 			if !d.known {
 				out <- *NewDatapoint(d.ts, 0.0, false)
-				if d.ts == until {
+				if d.ts >= until {
 					return
 				}
 				continue
 			}
 			out <- *NewDatapoint(d.ts, d.value*multiplier, true)
-			if d.ts == until {
+			if d.ts >= until {
 				return
 			}
 		}

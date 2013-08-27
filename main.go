@@ -121,7 +121,7 @@ func renderJson(command string, from int32, until int32) string {
 func renderHandler(w http.ResponseWriter, r *http.Request) {
 	const lenPath = len("/render/")
 	from := int32(0)
-	until := int32(120)
+	until := int32(360)
 	command := r.URL.Path[lenPath:]
 	r.ParseForm()
 	fmt.Println("FORM", r.Form)
