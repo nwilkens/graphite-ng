@@ -8,30 +8,32 @@ import (
 func ReadMetric(name string) (our_el chains.ChainEl) {
 	our_el = *chains.NewChainEl()
 	data := map[string]*metrics.Metric{
-		"stats.web1.bytes_received": metrics.NewMetric(
-			"stats.web1.bytes_received",
+		"stats.web1": metrics.NewMetric(
+			"stats.web1",
 			[]*metrics.Datapoint{
-				metrics.NewDatapoint(120, 3, true),
-				metrics.NewDatapoint(180, 0, false),
-				metrics.NewDatapoint(240, 2, true),
-				metrics.NewDatapoint(300, 0, true),
-				metrics.NewDatapoint(360, 1, true),
-				metrics.NewDatapoint(420, 1, true),
-				metrics.NewDatapoint(480, 1.5, true),
-				metrics.NewDatapoint(540, 2, true),
+				metrics.NewDatapoint(0, 0, true),
+				metrics.NewDatapoint(60, 1, true),
+				metrics.NewDatapoint(120, 2, true),
+				metrics.NewDatapoint(180, 3, true),
+				metrics.NewDatapoint(240, 4, true),
+				metrics.NewDatapoint(300, 5, true),
+				metrics.NewDatapoint(360, 5.5, true),
+				metrics.NewDatapoint(420, 6, true),
+				metrics.NewDatapoint(480, 6.5, true),
+				metrics.NewDatapoint(540, 7, true),
 			},
 		),
-		"stats.web2.bytes_received": metrics.NewMetric(
-			"stats.web1.bytes_received",
+		"stats.web2": metrics.NewMetric(
+			"stats.web2",
 			[]*metrics.Datapoint{
 				metrics.NewDatapoint(120, 4, true),
-				metrics.NewDatapoint(180, 1, true),
+				metrics.NewDatapoint(180, 3, true),
 				metrics.NewDatapoint(240, 2, true),
 				metrics.NewDatapoint(300, 0, false),
 				metrics.NewDatapoint(360, 1, true),
 				metrics.NewDatapoint(420, 1, true),
 				metrics.NewDatapoint(480, 1, true),
-				metrics.NewDatapoint(540, 3, true),
+				metrics.NewDatapoint(540, 2, true),
 			},
 		),
 	}

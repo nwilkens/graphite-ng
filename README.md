@@ -23,7 +23,8 @@ rm -f executor-*.go ; go install github.com/Dieterbe/graphite-ng && graphite-ng
 ```
 then open something like this in your browser:
 ```
-http://localhost:8080/render/?target=sum(stats.web1.bytes_received,scale(stats.web2.bytes_received,5))&from=60&until=300
+http://localhost:8080/render/?target=sum(stats.web1,scale(stats.web2,5))&from=60&until=300
+http://localhost:8080/render/?target=stats.web2&target=derivative(stats.web2)
 ```
 look at data.go and functions.go for which metrics and functions you can use so far.
 
