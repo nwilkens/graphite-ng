@@ -68,6 +68,8 @@ func generateCommand(target string) string {
 			cmd += ",\n"
 		case token.INT:
 			cmd += t.lit
+		case token.FLOAT:
+			cmd += t.lit
 		}
 	}
 	return cmd
