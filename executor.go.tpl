@@ -9,17 +9,22 @@ func main () {
     until := int32({{.Until}})
     var dep_el chains.ChainEl
 
+fmt.Print("[")
 {{range .Targets}}
-    fmt.Printf("{'target': {{.Query}})")
     dep_el = {{.Cmd}}
     dep_el.Settings <- from
     dep_el.Settings <- until
+    fmt.Printf("{\"target\": \"{{.Query}}\", \"datapoints\": [")
     for {
          d := <- dep_el.Link
-         fmt.Println(d)
+         fmt.Printf("[%f, %d]", d.Value, d.Ts)
          if d.Ts >= until {
              break
-         }
+         } else {
+            fmt.Printf(", ")
+        }
     }
+    fmt.Printf("]},\n") // last shouldn't have extra comma.
 {{end}}
+fmt.Printf("]")
 }
