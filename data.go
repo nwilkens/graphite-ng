@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/Dieterbe/graphite-ng/chains"
 	"github.com/Dieterbe/graphite-ng/metrics"
 )
@@ -37,7 +38,10 @@ func ReadMetric(name string) (our_el chains.ChainEl) {
 			},
 		),
 	}
-	metric := data[name]
+	metric, ok := data[name]
+	if !ok {
+		panic(fmt.Sprintf("No such metric available: %s", name))
+	}
 	go func(our_el chains.ChainEl, metric *metrics.Metric) {
 		from := <-our_el.Settings
 		until := <-our_el.Settings
