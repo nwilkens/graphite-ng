@@ -146,7 +146,7 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	targets_list := r.Form["target"]
 	if len(targets_list) < 1 {
-		fmt.Fprintf(w, "{}")
+		fmt.Fprintf(w, "invalid request: no targets requested")
 	} else {
 		fmt.Fprintf(w, renderJson(targets_list, from, until))
 	}
