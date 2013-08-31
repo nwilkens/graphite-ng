@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"github.com/Dieterbe/graphite-ng/functions"
 	"go/scanner"
 	"go/token"
 	"math/rand"
@@ -48,7 +49,7 @@ func generateCommand(target string) string {
 		case token.IDENT:
 			// a function is starting
 			if tokens[i+1].tok == token.LPAREN {
-				cmd += Functions[t.lit]
+				cmd += "functions." + functions.Functions[t.lit]
 				// this is the beginning of a target string
 			} else if tokens[i+1].tok == token.PERIOD && tokens[i-1].tok != token.PERIOD {
 				cmd += "ReadMetric(\"" + t.lit
@@ -103,8 +104,8 @@ func renderJson(targets_list []string, from int32, until int32) string {
 	fmt.Println("writing to template", params)
 	t.Execute(fo, params)
 	// TODO: timeout, display errors, etc
-	fmt.Printf("executing: go run %s functions.go data.go\n", fname)
-	cmd_exec := exec.Command("go", "run", fname, "functions.go", "data.go")
+	fmt.Printf("executing: go run %s data.go\n", fname)
+	cmd_exec := exec.Command("go", "run", fname, "data.go")
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 	cmd_exec.Stdout = &stdout
@@ -152,6 +153,10 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	fmt.Println("registered functions:")
+	for k, v := range functions.Functions {
+		fmt.Printf("%-20s -> %s\n", k, v)
+	}
 	http.HandleFunc("/render/", renderHandler)
 	http.ListenAndServe(":8080", nil)
 }
