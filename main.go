@@ -145,6 +145,12 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 		until = int32(until_i64)
 	}
 	targets_list := r.Form["target"]
+	for _, target := range targets_list {
+		if target == "" {
+			fmt.Fprintf(w, "invalid request: one or more empty targets")
+			return
+		}
+	}
 	if len(targets_list) < 1 {
 		fmt.Fprintf(w, "invalid request: no targets requested")
 	} else {
