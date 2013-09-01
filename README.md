@@ -10,6 +10,7 @@ Furthermore, this rewrite allows to redesign and fundamentally improve some spec
  * only the json output, not the png renderer. (because [client side rendering](https://github.com/vimeo/timeserieswidget/) is best)
  * No web UI (because there are plenty of graphite dashboards out there)
  * No reinventing carbon/whisper/ceres at this point. (I later want to hook this up to a reliable timeseries store, maybe whisper, ceres, kairosdb, ...).
+   (there's a `carbon-es` dir which is a carbon-cache that stores metrics in elasticsearch, but I'm still experimenting with it)
  * No events system (graphite events sucks, [anthracite](https://github.com/Dieterbe/anthracite/) is better)
  * No wildcards yet
 
