@@ -70,7 +70,7 @@ func handleClient(conn_in net.Conn) {
 			}
 		}
         str := strings.TrimSpace(string(buf))
-        fmt.Println(str)
+        //fmt.Println(str)
         dp_str := strings.Split(str, " ")
         metric_name := dp_str[0]
         value, err := strconv.ParseFloat(dp_str[1], 64)
