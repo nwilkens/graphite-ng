@@ -3,11 +3,12 @@ host=$(grep -A3 elasticsearch carbon-es.conf | sed -n 's/^host = "\(.*\)"/\1/p')
 port=$(grep -A3 elasticsearch carbon-es.conf | sed -n 's/^port = \(.*\)/\1/p')
 index=carbon-es
 
+echo "elasticsarch server: http://$host:$port"
 echo "delete existing index $index (maybe)"
 curl -X DELETE http://$host:$port/$index
 echo
 echo "create index $index"
-curl -XPOST $host:$port/$index -d '{
+curl -XPOST http://$host:$port/$index -d '{
     "settings" : {
         "number_of_shards" : 1
     },
@@ -18,7 +19,7 @@ curl -XPOST $host:$port/$index -d '{
             "properties" : {
                 "metric": {"type": "string"},
                 "ts": {"type": "integer"},
-                "value": {"type": "float"},
+                "value": {"type": "float"}
             }
         }
     }
