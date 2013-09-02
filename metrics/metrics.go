@@ -19,7 +19,7 @@ func NewDatapoint(ts int32, value float64, known bool) *Datapoint {
 }
 
 func (d *Datapoint) String() string {
-	return fmt.Sprintf("datapoint ts=%i, value=%f, known=%b", d.Ts, d.Value, d.Known)
+	return fmt.Sprintf("datapoint ts=%d, value=%f, known=%t", d.Ts, d.Value, d.Known)
 }
 
 func NewMetric(name string, data []*Datapoint) *Metric {
