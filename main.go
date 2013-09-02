@@ -125,7 +125,6 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 	from := int32(0)
 	until := int32(360)
 	r.ParseForm()
-	fmt.Println("FORM", r.Form)
 	from_list := r.Form["from"]
 	if len(from_list) > 0 {
 		from_i64, err := strconv.ParseInt(from_list[0], 10, 32)
