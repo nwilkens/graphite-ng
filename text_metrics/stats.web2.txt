@@ -1,0 +1,8 @@
+120 4 true
+180 3 true
+240 2 true
+300 0 false
+360 1 true
+420 1 true
+480 1 true
+540 2 true

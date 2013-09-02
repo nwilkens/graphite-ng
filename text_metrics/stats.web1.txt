@@ -1,0 +1,10 @@
+0 0 true
+60 1 true
+120 2 true
+180 3 true
+240 4 true
+300 5 true
+360 5.5 true
+420 6 true
+480 6.5 true
+540 7 true

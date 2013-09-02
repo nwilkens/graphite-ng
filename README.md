@@ -9,7 +9,7 @@ Furthermore, this rewrite allows to redesign and fundamentally improve some spec
  * Not all functions are supported yet
  * only the json output, not the png renderer. (because [client side rendering](https://github.com/vimeo/timeserieswidget/) is best)
  * No web UI (because there are plenty of graphite dashboards out there)
- * No reinventing carbon/whisper/ceres at this point. (I later want to hook this up to a reliable timeseries store, maybe whisper, ceres, kairosdb, ...).
+ * No reinventing whisper/ceres at this point. (I want to hook this up to a reliable timeseries store, maybe whisper, ceres, kairosdb, ...).
    (there's a `carbon-es` dir which is a carbon-cache that stores metrics in elasticsearch, but I'm still experimenting with it)
  * No events system (graphite events sucks, [anthracite](https://github.com/Dieterbe/anthracite/) is better)
  * No wildcards yet
@@ -47,6 +47,10 @@ examples in data.go.
 
 all functions come in plugin files. want to add a new function? just drop a .go file in the functions folder and restart.  You can easily add your own functions
 that get data from external sources, manipulate data, or represent data in a different way; and then call those functions from your target string.
+
+# Metric store plugins
+
+Graphite-ng can query metrics from different stores. At this point only the example text_metrics store is implemented, but it's easy to add more.
 
 # other interesting things & diff with real graphite:
 
