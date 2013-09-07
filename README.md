@@ -7,12 +7,15 @@ Furthermore, this rewrite allows to fundamentally redesign some specific annoyan
 # Limitations
 
  * Not all functions are supported yet
- * only the json output, not the png renderer. (because [client side rendering](https://github.com/vimeo/timeserieswidget/) is best)
- * No web UI (because there are plenty of graphite dashboards out there)
  * No reinventing whisper/ceres at this point. (I want to hook this up to a reliable timeseries store, maybe whisper, ceres, kairosdb, ...).
    (there's a `carbon-es` dir which is a carbon-cache that stores metrics in elasticsearch, but I'm still experimenting with it)
- * No events system (graphite events sucks, [anthracite](https://github.com/Dieterbe/anthracite/) is better)
  * No wildcards yet
+
+# Omissions 
+
+ * only the json output, not the png renderer. (because [client side rendering](https://github.com/vimeo/timeserieswidget/) is best)
+ * No web UI (because there are plenty of graphite dashboards out there)
+ * No events system (graphite events sucks, [anthracite](https://github.com/Dieterbe/anthracite/) is better)
 
 # How it works
 
@@ -21,7 +24,7 @@ Furthermore, this rewrite allows to fundamentally redesign some specific annoyan
 
 `graphite-ng` converts all user input into a real, functioning Go program, compiles and runs it, and returns the output.
 It can do this because the graphite api notation can easily be converted to real program code.  Great power, great responsability.
-The worker functions use channels to stream data around and avoid blocking.
+The worker functions use goroutines and channels to stream data around and avoid blocking.
 
 # Installation & running
 
