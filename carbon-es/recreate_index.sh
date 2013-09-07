@@ -1,6 +1,6 @@
 #!/bin/bash
-host=$(grep -A3 elasticsearch carbon-es.conf | sed -n 's/^host = "\(.*\)"/\1/p')
-port=$(grep -A3 elasticsearch carbon-es.conf | sed -n 's/^port = \(.*\)/\1/p')
+host=$(grep -A3 elasticsearch graphite-ng.conf | sed -n 's/^host = "\(.*\)"/\1/p')
+port=$(grep -A3 elasticsearch graphite-ng.conf | sed -n 's/^port = \(.*\)/\1/p')
 index=carbon-es
 
 echo "elasticsarch server: http://$host:$port"

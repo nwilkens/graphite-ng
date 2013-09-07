@@ -3,6 +3,8 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"github.com/Dieterbe/graphite-ng/es"
+	"github.com/Dieterbe/graphite-ng/util"
 	"github.com/mattbaird/elastigo/api"
 	"github.com/mattbaird/elastigo/core"
 	"github.com/stvp/go-toml-config"
@@ -14,19 +16,6 @@ import (
 	"time"
 )
 
-type DatapointEs struct {
-	Metric string  `json:"metric"`
-	Ts     int32   `json:"ts"`
-	Value  float64 `json:"value"`
-}
-
-func dieIfError(err error) {
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Fatal error: %s\n", err.Error())
-		os.Exit(1)
-	}
-}
-
 func main() {
 	var (
 		es_host        = config.String("elasticsearch.host", "undefined")
@@ -35,8 +24,8 @@ func main() {
 		in_port        = config.Int("in.port", 2003)
 	)
 	fmt.Println(*es_max_pending)
-	err := config.Parse("carbon-es.conf")
-	dieIfError(err)
+	err := config.Parse("graphite-ng.conf")
+	util.DieIfError(err)
 
 	api.Domain = *es_host
 	api.Port = strconv.Itoa(*es_port)
@@ -45,15 +34,15 @@ func main() {
 
 	// listen for incoming metrics
 	addr, err := net.ResolveTCPAddr("tcp4", fmt.Sprintf(":%d", *in_port))
-	dieIfError(err)
+	util.DieIfError(err)
 	listener, err := net.ListenTCP("tcp", addr)
-	dieIfError(err)
+	util.DieIfError(err)
 	defer listener.Close()
 
 	fmt.Printf("carbon-es ready to serve on %d\n", *in_port)
 	for {
 		conn_in, err := listener.Accept()
-		dieIfError(err)
+		util.DieIfError(err)
 		go handleClient(conn_in)
 	}
 }
@@ -87,9 +76,9 @@ func handleClient(conn_in net.Conn) {
 		// seems a little redundant but i guess we can use it to avoid
 		// duplicate values
 		id := fmt.Sprintf("%s_%d", metric_name, ts)
-		dp := DatapointEs{metric_name, int32(ts), value}
+		dp := es.Datapoint{metric_name, int32(ts), value}
 		date := time.Now()
 		err = core.IndexBulk("carbon-es", "datapoint", id, &date, &dp)
-		dieIfError(err)
+		util.DieIfError(err)
 	}
 }
