@@ -51,7 +51,7 @@ that get data from external sources, manipulate data, or represent data in a dif
 # Metric store plugins
 
 * Graphite-ng can query metrics from different stores.  
-  At this point only the example text store is implemented, but it's easy to add more.  Next up is whisper and elasticsearch.
+  At this point only the example text store works.  I'm working on the elasticsearch one.  A whisper plugin is on the roadmap.
 * Carbon-ng will be able to use plugins to store metrics.  For now it can only store in the experimental elasticsearch store.
 
 # other interesting things & diff with real graphite:
