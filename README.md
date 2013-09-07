@@ -2,7 +2,7 @@
 
 Experimental version of a new generation Graphite API server in Golang, leveraging Go's efficient concurrency constructs.
 Goals are: speed, ease of deployment. elegant code.  
-Furthermore, this rewrite allows to redesign and fundamentally improve some specific annoyances.
+Furthermore, this rewrite allows to fundamentally redesign some specific annoyances.
 
 # Limitations
 
@@ -50,7 +50,9 @@ that get data from external sources, manipulate data, or represent data in a dif
 
 # Metric store plugins
 
-Graphite-ng can query metrics from different stores. At this point only the example text_metrics store is implemented, but it's easy to add more.
+* Graphite-ng can query metrics from different stores.  
+  At this point only the example text store is implemented, but it's easy to add more.  Next up is whisper and elasticsearch.
+* Carbon-ng will be able to use plugins to store metrics.  For now it can only store in the experimental elasticsearch store.
 
 # other interesting things & diff with real graphite:
 
@@ -59,8 +61,10 @@ Graphite-ng can query metrics from different stores. At this point only the exam
   * `movingAverage(foo, X)` needs x previous datapoints.
   Regular graphite doesn't support this so you end up with gaps in the beginning of the graph.
 * clever automatic rollups based on tags (TODO)
-* The keys in Graphite's json output are sometimes not exactly the requested target string (usually manifests itself as floats being rounded), it's not so easily fixed in Graphite
-  due to the pathExpression system,  which means client renderes have to implement ugly hacks to work around this. 
+* The pathExpression system in graphite is overly complicated and buggy.  
+  The keys in Graphite's json output are sometimes not exactly the requested target string (i.e. floats being rounded), it's not so easily fixed in Graphite
+  which means client renderes have to implement ugly hacks to work around this. 
   With graphite-ng we just use the exact same string.
 * avoid any results being dependent on any particular potentially unknown variable, aim for per second instead of per current-interval, etc. specifically:
   * derivative is a true derivative (ie `(y2-y1)/(x2-x1)`) unlike graphite's derivative where you depend on a factor that depends on whatever the resolution is at each point in time.
+* be mathematically/logically correct by default ("nil+123" should be "nil" not "123", though the functions could get a "sloppyness" argument)
