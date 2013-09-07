@@ -15,9 +15,9 @@ func GetTextMetricPath(name string) string {
 	return fmt.Sprintf("text_metrics/%s.txt", name)
 }
 
-func IsTextMetric(name string) bool {
-	_, err := os.Stat(GetTextMetricPath(name))
-	return (err == nil)
+func IsTextMetric(name string) (found bool, err error) {
+	_, err = os.Stat(GetTextMetricPath(name))
+	return (err == nil), nil
 }
 
 func ReadTextMetric(name string) (our_el *chains.ChainEl, err error) {
@@ -40,7 +40,7 @@ func ReadTextMetric(name string) (our_el *chains.ChainEl, err error) {
 		datapoints = append(datapoints, dp)
 	}
 	if err := scanner.Err(); err != nil {
-		return nil, errors.New(fmt.Sprintf("error reading %s: %s", path, err))
+		return nil, errors.New(fmt.Sprintf("error reading %s: %s", path, err.Error()))
 	}
 	metric := metrics.NewMetric(name, datapoints)
 
