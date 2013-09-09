@@ -2,7 +2,7 @@ package functions
 
 import (
 	"fmt"
-	"github.com/Dieterbe/graphite-ng/chains"
+	"github.com/graphite-ng/graphite-ng/chains"
 )
 
 func init() {

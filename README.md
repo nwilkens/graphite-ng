@@ -30,7 +30,7 @@ The worker functions use goroutines and channels to stream data around and avoid
 
 run this from the code checkout:
 ```
-rm -f executor-*.go ; go install github.com/Dieterbe/graphite-ng && graphite-ng
+rm -f executor-*.go ; go install github.com/graphite-ng/graphite-ng && graphite-ng
 ```
 
 then open something like this in your browser:
