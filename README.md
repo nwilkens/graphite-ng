@@ -15,7 +15,7 @@ Furthermore, this rewrite allows to fundamentally redesign some specific annoyan
 
  * only the json output, not the png renderer. (because [client side rendering](https://github.com/vimeo/timeserieswidget/) is best)
  * No web UI (because there are plenty of graphite dashboards out there)
- * No events system (graphite events sucks, [anthracite](https://github.com/Dieterbe/anthracite/) is better)
+ * No events system ([anthracite](https://github.com/Dieterbe/anthracite/) is better than the very basic graphite events thing)
 
 # How it works
 
