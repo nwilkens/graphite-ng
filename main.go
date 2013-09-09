@@ -3,7 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"github.com/Dieterbe/graphite-ng/functions"
+	"github.com/graphite-ng/graphite-ng/functions"
 	"go/scanner"
 	"go/token"
 	"math/rand"

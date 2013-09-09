@@ -3,8 +3,8 @@ package stores
 import (
 	"errors"
 	"fmt"
-	"github.com/Dieterbe/graphite-ng/chains"
-	"github.com/Dieterbe/graphite-ng/util"
+	"github.com/graphite-ng/graphite-ng/chains"
+	"github.com/graphite-ng/graphite-ng/util"
 	"github.com/mattbaird/elastigo/api"
 	"github.com/mattbaird/elastigo/core"
 	"github.com/stvp/go-toml-config"

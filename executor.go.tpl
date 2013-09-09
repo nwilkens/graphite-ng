@@ -1,8 +1,8 @@
 package main
 import (
     "fmt"
-            "github.com/Dieterbe/graphite-ng/chains"
-    "github.com/Dieterbe/graphite-ng/functions"
+	"github.com/graphite-ng/graphite-ng/chains"
+    "github.com/graphite-ng/graphite-ng/functions"
 
 )
 
